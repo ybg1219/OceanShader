@@ -53,6 +53,7 @@
 					float2 uv_FloatingFoamTex;
 					float4 screenPos;
 					float3 worldRefl;
+					float3 worldPos;
 					INTERNAL_DATA
 				};
 
@@ -75,7 +76,7 @@
 				float _FloatingFoamSpeed;
 
 				float _WaveTime;
-				float _WaterFrequency;
+				float _WaveFrequency;
 				float _WaveAmplitude;
 
 				UNITY_INSTANCING_BUFFER_START(Props)
@@ -84,8 +85,8 @@
 				void vert(inout appdata_full v)
 				{
 					float movement;
-					movement = sin(abs(v.texcoord.x * 2 - 1) * _WaterFrequency + _Time.y * _WaveTime) * _WaveAmplitude;
-					movement += sin(abs(v.texcoord.y * 2 - 1) * _WaterFrequency + _Time.y * _WaveTime) * _WaveAmplitude;
+					movement = sin(abs(v.texcoord.x * 2 - 1) * _WaveFrequency + _Time.y * _WaveTime) * _WaveAmplitude;
+					movement += sin(abs(v.texcoord.y * 2 - 1) * _WaveFrequency + _Time.y * _WaveTime) * _WaveAmplitude;
 					v.vertex.y += movement*0.5;
 				}
 
@@ -95,18 +96,35 @@
 					float shorelineMask = tex2D(_ShorelineFoamTex, IN.uv_ShorelineFoamTex * _ShorelineFoamTiling + float2(_Time.y, _Time.y / 2) * _ShorelineFoamSpeed).r;
 
 					// Floating Foam 연산
-					float4 floatingPos = tex2D(_FloatingFoamPos, IN.uv_FloatingFoamPos * _FloatingFoamTiling + float2(_Time.y, _Time.y / 2) * _FloatingFoamSpeed);
-					float4 floatingTex = tex2D(_FloatingFoamTex, IN.uv_FloatingFoamTex * _FloatingFoamTiling + float2(_Time.y, _Time.y / 2) * _FloatingFoamSpeed);
+					float2 timeOffset = float2(_Time.y, _Time.y / 2) * _FloatingFoamSpeed;
+
+					// 레이어 1
+					float4 floatingPos = tex2D(_FloatingFoamPos, IN.uv_FloatingFoamPos * _FloatingFoamTiling + timeOffset);
+					// 레이어 2 (다른 스케일과 반대 방향 속도)
+					float4 floatingPos2 = tex2D(_FloatingFoamPos, IN.uv_FloatingFoamPos * (_FloatingFoamTiling * 1.73) - timeOffset * 0.8); 
+					float4 floatingTex = tex2D(_FloatingFoamTex, IN.uv_FloatingFoamTex * _FloatingFoamTiling + timeOffset);
 
 					// Depth 기반 Shoreline 영역 정의
 					float depth = LinearEyeDepth(tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(IN.screenPos)).r);
 					float shorelineArea = saturate((depth - IN.screenPos.w) / _ShorelineFoamThickness);
 
 					float3 shorelineFoam = saturate(_ShorelineFoamColor.rgb * shorelineMask);
+					
+					// 1. 두 레이어를 곱해 기초 교집합 생성
+					float combinedMask = floatingPos.r * floatingPos2.r;
 
-					// 기존 sf.a 조건부 로직 유지
-					floatingPos.a = floatingPos.r >= 0.5 ? saturate(sin(_Time.y)) * floatingPos.a : 0;
-					float3 floatingFoam = floatingTex.rgb *_FloatingFoamColor * floatingPos.a;
+					// 2. 시간에 따른 유기적인 임계값 (Threshold) 애니메이션
+					// 거품이 한 번에 나타나지 않고 위치마다 다르게 나타나게 함
+					float animatedThreshold = saturate(sin(_Time.y * 0.8) * 0.5 + 0.5) * 0.2;
+
+					// 3. Smoothstep을 사용하여 도장 느낌 제거
+					// 임계값보다 높은 부분은 남기고, 경계는 부드럽게 처리
+					float finalMask = smoothstep(animatedThreshold, animatedThreshold+0.2, combinedMask);
+
+					// 4. 최종 알파 적용
+					floatingPos.a *= finalMask;
+
+					float3 floatingFoam = floatingTex.rgb * _FloatingFoamColor.rgb * floatingPos.a;
 
 					// 최종 색상 혼합 (기존 로직 유지)
 					o.Emission = _WaterColor.rgb + lerp(shorelineFoam, floatingFoam, shorelineArea);
