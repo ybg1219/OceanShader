@@ -47,6 +47,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _FoamTex:
+        m_Texture: {fileID: 2800000, guid: d45205303c28ac14c8eb2d2a5429622d, type: 3}
+        m_Scale: {x: 4, y: 4}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -64,10 +68,16 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - _Amplitude: 1.5
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
+    - _FoamSpeed: 0.1
+    - _FoamThickness: 0.04
+    - _FoamTickness: 10
+    - _FoamTiling: 10
+    - _Frequency: 10
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
@@ -79,18 +89,24 @@ Material:
     - _Refraction: 0.2
     - _SPAmplitude: 0.5
     - _SPMulti: 1
+    - _SPPower: 206
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
+    - _Speed: 0.164
     - _SrcBlend: 1
     - _UVSec: 0
     - _WaveHeight: 1
     - _WaveLength: 1
-    - _WaveTime: 1
+    - _WaveTime: 10
     - _ZWrite: 1
-    - _fresnel: 10
+    - _fOffset: 0.215
+    - _fresnel: 3.1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _ColorA: {r: 0, g: 0.98039246, b: 1, a: 1}
     - _ColorB: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _SPColor: {r: 1, g: 1, b: 1, a: 1}
+    - _FoamColor: {r: 0, g: 0.3679245, b: 0.1386581, a: 1}
+    - _SPColor: {r: 0.98823535, g: 0.9607844, b: 0.86666673, a: 1}
+    - _WaterColor: {r: 0.6650944, g: 0.91460574, b: 1, a: 1}
+    - _water: {r: 1, g: 1, b: 1, a: 1}
