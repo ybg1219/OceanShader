@@ -48,7 +48,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FloatingFoamPos:
-        m_Texture: {fileID: 2800000, guid: d45205303c28ac14c8eb2d2a5429622d, type: 3}
+        m_Texture: {fileID: 2800000, guid: e33af37810c1e8c43836c6cf00055146, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FloatingFoamPosTex:
@@ -56,7 +56,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FloatingFoamTex:
-        m_Texture: {fileID: 2800000, guid: 6023cf04396448b469e32301c08b6128, type: 3}
+        m_Texture: {fileID: 2800000, guid: 8faf31424ed312d43b59a07bf75c398e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FoamTex:
@@ -97,9 +97,9 @@ Material:
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _FloatingFoamSpeed: 0.04
-    - _FloatingFoamThickness: 0.1
-    - _FloatingFoamTiling: 5.65
+    - _FloatingFoamSpeed: 0.1
+    - _FloatingFoamThickness: 0.208
+    - _FloatingFoamTiling: 2.13
     - _FoamSpeed: 0.106
     - _FoamThickness: 0.25
     - _FoamTiling: 1
@@ -118,31 +118,31 @@ Material:
     - _SPPower: 1
     - _ShorelineFoamSpeed: 0.178
     - _ShorelineFoamThickness: 3.8
-    - _ShorelineFoamTiling: 5.62
+    - _ShorelineFoamTiling: 5.18
     - _SmallFoamSpeed: 0.098
     - _SmallFoamThickness: 0.01
     - _SmallFoamTiling: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
-    - _SpecularPower: 50
+    - _SpecularPower: 300
     - _Speed: 0.2
     - _SrcBlend: 1
     - _UVSec: 0
-    - _WaveAmplitude: 1
-    - _WaveFrequency: 1.96
+    - _WaveAmplitude: 1.4
+    - _WaveFrequency: 1.5
     - _WaveSpeed: 1.5
-    - _WaveTime: 2.19
+    - _WaveTime: 2.6
     - _ZWrite: 1
     - _fOffset: 0.031
     - _fresnel: 1.8
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _FloatingFoamColor: {r: 0.05322181, g: 0.8679245, b: 0.76156765, a: 1}
+    - _FloatingFoamColor: {r: 0.97136974, g: 1, b: 0, a: 1}
     - _FoamColor: {r: 1, g: 0.17671019, b: 0, a: 1}
     - _FresnelColor: {r: 0, g: 0.3294115, b: 1, a: 1}
     - _SPColor: {r: 1, g: 1, b: 1, a: 1}
-    - _ShorelineFoamColor: {r: 0.8941176, g: 1, b: 0, a: 1}
+    - _ShorelineFoamColor: {r: 1, g: 0, b: 0, a: 1}
     - _SmallFoamColor: {r: 0.9427508, g: 1, b: 0, a: 1}
     - _SpecColor: {r: 1, g: 0.5547682, b: 0.16509432, a: 1}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
