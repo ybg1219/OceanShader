@@ -27,6 +27,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: 3ef92e101baa8a0429c85daf239e28e3, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _CausticsTex:
+        m_Texture: {fileID: 2800000, guid: 61d697509c03db84994b8d2eadf22997, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Cube:
         m_Texture: {fileID: 8900000, guid: 656a59a5ff93c46498416d97e5c16b66, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -95,12 +99,15 @@ Material:
     - _Amplitude: 1
     - _BumpScale: 1
     - _BumpSpeed: 0.226
+    - _CausticsSpeed: 0.037
+    - _CausticsThreshold: 0.512
+    - _CausticsTiling: 3.21
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _FloatingFoamSpeed: 0.1
     - _FloatingFoamThickness: 0.208
-    - _FloatingFoamTiling: 2.13
+    - _FloatingFoamTiling: 4.71
     - _FoamSpeed: 0.106
     - _FoamThickness: 0.25
     - _FoamTiling: 1
@@ -118,7 +125,7 @@ Material:
     - _SPMulti: 0.165
     - _SPPower: 1
     - _ShorelineDefaultThickness: 0.31
-    - _ShorelineFoamSpeed: 0.1
+    - _ShorelineFoamSpeed: 0.15
     - _ShorelineFoamThickness: 10
     - _ShorelineFoamTiling: 10
     - _SmallFoamSpeed: 0.098
@@ -138,7 +145,9 @@ Material:
     - _fOffset: 0.031
     - _fresnel: 1.8
     m_Colors:
+    - _CausticsColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _DeepWaterColor: {r: 0, g: 0.4959962, b: 0.8666667, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FloatingFoamColor: {r: 0.15641688, g: 0.3490566, b: 0.2768167, a: 1}
     - _FoamColor: {r: 1, g: 0.17671019, b: 0, a: 1}

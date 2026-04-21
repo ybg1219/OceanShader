@@ -4,6 +4,7 @@
 	{
 		[Header(Base Water Settings)]
 		_WaterColor("Water Color", Color) = (1,1,1,1)
+		_DeepWaterColor("Deep Water Color", Color) = (1,1,1,1)
 		_FresnelColor("Fresnel Color", Color) = (1,1,1,1)
 		_FresnelPower("Fresnel Power", Range(1,50)) = 30
 		_FresnelOffset("Fresnel Offset", Range(0,1)) = 0.3
@@ -36,6 +37,14 @@
 		_FloatingFoamTiling("Floating Foam Tiling", Range(1,10)) = 1
 		_FloatingFoamThickness("Floating Foam Thickness", Range(0.01,2)) = 0.1
 		_FloatingFoamSpeed("Floating Foam Speed", Range(0.1,1)) = 0.1
+
+		// Properties에 추가
+		[Header(Caustics Settings)]
+		_CausticsTex("Caustics Texture", 2D) = "black" {}
+		_CausticsColor("Caustics Color", Color) = (1,1,1,1)
+		_CausticsTiling("Caustics Tiling", Range(0.1, 4)) = 1
+		_CausticsSpeed("Caustics Speed", Range(0, 1)) = 0.1
+		_CausticsThreshold("Caustics Threshold", Range(0, 1)) = 0.5
 	}
 		SubShader
 		{
@@ -50,7 +59,9 @@
 				sampler2D _CameraDepthTexture;
 				sampler2D _FloatingFoamPos;
 				sampler2D _FloatingFoamTex;
-				sampler2D _BumpTex;
+				sampler2D _BumpTex; 
+				sampler2D _CausticsTex;
+				
 
 				struct Input
 				{
@@ -58,6 +69,7 @@
 					float2 uv_ShorelineFoamTex;
 					float2 uv_FloatingFoamPos;
 					float2 uv_FloatingFoamTex;
+					float2 uv_Caustics;
 					float4 screenPos;
 					float3 worldRefl;
 					float3 worldPos;
@@ -65,11 +77,13 @@
 					INTERNAL_DATA
 				};
 
-				half4 _WaterColor, _FresnelColor, _SpecularColor, _ShorelineColor, _ShorelineFoamColor, _FloatingFoamColor;
+				half4 _WaterColor, _DeepWaterColor, _FresnelColor, _SpecularColor, _ShorelineColor, _ShorelineFoamColor, _FloatingFoamColor;
 				float _FresnelPower, _FresnelOffset, _SpecularPower, _BumpSpeed;
 				float _ShorelineFoamTiling, _ShorelineFoamThickness, _ShorelineDefaultThickness, _ShorelineFoamSpeed;
 				float _FloatingFoamTiling, _FloatingFoamThickness, _FloatingFoamSpeed;
 				float _WaveTime, _WaveFrequency, _WaveAmplitude;
+				half4 _CausticsColor;
+				float _CausticsTiling, _CausticsSpeed, _CausticsThreshold;
 
 				UNITY_INSTANCING_BUFFER_START(Props)
 				UNITY_INSTANCING_BUFFER_END(Props)
@@ -100,6 +114,39 @@
 					return (half)lines;
 				}
 
+				// 스타일라이즈드 화선(Caustics) 계산 함수
+				half3 CalculateCaustics(float3 worldPos, half3 causticsColor, float tiling, float speed, float threshold, float rawDepth)
+				{
+					// --- 0. Fake Depth 생성 ---
+					// 수면(보통 0)으로부터의 거리를 계산합니다.
+					// float distFromSurface = max(0, _WaveAmplitude - worldPos.y);
+					float fakeDepth = saturate(rawDepth)*saturate(pow(1-rawDepth,1.0));
+					//return fakeDepth;
+					// --- 1. 기본 UV 및 애니메이션 설정 ---
+					float2 uv = worldPos.xz * 0.01 * tiling;
+					float2 move1 = float2(_Time.y, _Time.y * 0.5) * speed;
+					float2 move2 = float2(_Time.y * 0.6, _Time.y * -0.3) * speed;
+
+					half mask1 = tex2D(_CausticsTex, uv * 0.6 + move1).r;
+					half mask2 = tex2D(_CausticsTex, uv * 0.4 + move2).r;
+
+					// --- 2. 수면용 화선 (밝고 또렷하게 위에 뜨는 느낌) ---
+					// threshold를 높게 잡아 얇고 날카로운 선을 만듭니다.
+					half surfaceMask = step(threshold, mask1);
+					// 수면 근처(fakeDepth가 낮을 때)에서만 강하게 나타나도록 설정
+					half3 surfaceCaustics = surfaceMask * causticsColor.rgb; // 밝게 강조
+
+					// --- 3. 바닥용 화선 (진하고 흐리게 깔리는 느낌) ---
+					// threshold를 낮게 잡아 면적을 넓히고, 뭉툭하게 만듭니다.
+					half floorMask = smoothstep(threshold - 0.2, threshold + 0.1, mask2)*0.5;
+					floorMask *= fakeDepth;// smoothstep(0.4, 0.0, fakeDepth);
+					// 물 색상보다 어둡거나 진한 톤으로 설정 (causticsColor의 명도를 낮춰서 사용 가능)
+					half3 floorCaustics = floorMask * causticsColor.rgb ;
+
+					// --- 4. 최종 결합 ---
+					return surfaceCaustics + floorCaustics;
+				}
+
 				void surf(Input IN, inout SurfaceOutput o)
 				{
 					float3 normal1 = UnpackNormal(tex2D(_BumpTex, IN.uv_BumpTex + _Time.x * _BumpSpeed));
@@ -115,9 +162,12 @@
 					float shorelineMask = 1.0 - tex2D(_ShorelineFoamTex, IN.uv_ShorelineFoamTex * _ShorelineFoamTiling + float2(_Time.y, _Time.y / 2) * _ShorelineFoamSpeed).r;
 					shorelineMask = step(0.8, shorelineMask);
 					float depth = LinearEyeDepth(tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(IN.screenPos)).r);
-					float shorelineArea = saturate((depth - IN.screenPos.w) / _ShorelineFoamThickness);
+					
+					float rawDepth = depth - IN.screenPos.w;
+					float shorelineArea = saturate(rawDepth / _ShorelineFoamThickness);
+					float3 baseOcean = lerp(_WaterColor.rgb, _DeepWaterColor.rgb, pow(saturate(rawDepth/20.0), 2.0));
 
-					shorelineMask = (shorelineArea <= _ShorelineDefaultThickness) ? 1.0 : shorelineMask;
+					shorelineMask = (shorelineArea <= _ShorelineDefaultThickness) ? 1.0 : shorelineMask; // 가장 가까운 고정된 shoreline
 					// shorelineMask = shorelineMask * (1.0 - shorelineArea);  // 자연스러운 fade
 					shorelineMask = shorelineMask * smoothstep(0.9, 0.4, shorelineArea); // p1 보다 작으면 0 p2보다 크면 1
 					
@@ -134,17 +184,26 @@
 					// viewDir와 Normal의 각도 계산 (o.Normal은 기본적으로 0,1,0)
 					float rim = saturate(dot(normalize(IN.viewDir), o.Normal));
 					float fresnelFactor = saturate(pow(1.0 - rim, _FresnelPower) + _FresnelOffset);
-
+					
+					half3 causticsResult = CalculateCaustics(
+						IN.worldPos,
+						_CausticsColor,
+						_CausticsTiling,
+						_CausticsSpeed,
+						_CausticsThreshold,
+						shorelineArea
+					);
 					// 5. 최종 색상 혼합 (lerp를 중첩하여 버닝 방지)
 					// (A) 물색과 프레넬 색 혼합
-					float3 baseOcean = lerp(_WaterColor.rgb, _FresnelColor.rgb, fresnelFactor);
+					baseOcean = lerp(baseOcean.rgb, _FresnelColor.rgb, fresnelFactor);
 
 					// (B) 물색에 shoreline 섞음
-					float3 withShoreline = lerp(baseOcean, _ShorelineColor.rgb, shorelineMask);
+					float3 withShoreline = baseOcean + _ShorelineColor.rgb*shorelineMask;//lerp(baseOcean, _ShorelineColor.rgb, shorelineMask);
 
 					// (C) 마지막으로 부유 거품(Floating Foam) 더하기 혹은 섞기
 					// 거품이 아주 밝아야 하므로 여기서는 Emission에 더해줍니다.
-					o.Emission = withShoreline;// +floatingFoamResult;
+					o.Emission = withShoreline + causticsResult;// +floatingFoamResult;
+					//o.Emission = baseOcean;
 					o.Alpha = 0.8; // ocean.a 고정값 적용
 				}
 
