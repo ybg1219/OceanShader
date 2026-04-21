@@ -12,7 +12,7 @@
 		[Header(Specular Settings)]
 		_BumpTex("BumpMap", 2D) = "bump" {}
 		_BumpSpeed("Bump Speed", Range(0,1)) = 0.1
-		_SpecularColor("Specular Color", Color) = (1,1,1,1)
+		[HDR]_SpecularColor("Specular Color", Color) = (1,1,1,1)
 		_SpecularPower("Specular Power", Range(50,300)) = 50
 
 		[Header(Wave Settings)]
@@ -97,10 +97,10 @@
 				}
 
 				// 다중 해안가 라인을 계산하는 함수
-				half CalculateMultiShoreline(float area, float time, float speed, float count)
+				half CalculateMultiShoreline(float area, float time, float speed, float count, float foam)
 				{
 					// 1. 시간에 따른 오프셋 (안쪽으로 밀려오는 움직임)
-					float waveOffset = time * speed * 20.0;
+					float waveOffset = time * speed * 20.0 ;
 
 					// 2. 파동 함수 (영역에 따라 반복되는 sin 파형)
 					float wave = sin(area * count * UNITY_PI * 2 - waveOffset);
@@ -159,8 +159,9 @@
 					float4 floatingTex = tex2D(_FloatingFoamTex, IN.uv_FloatingFoamTex * _FloatingFoamTiling + timeOffset);
 
 					// 2. Shoreline Foam 연산
-					float shorelineMask = 1.0 - tex2D(_ShorelineFoamTex, IN.uv_ShorelineFoamTex * _ShorelineFoamTiling + float2(_Time.y, _Time.y / 2) * _ShorelineFoamSpeed).r;
-					shorelineMask = step(0.8, shorelineMask);
+					float shorelineFoam = 1.0 - tex2D(_ShorelineFoamTex, IN.uv_ShorelineFoamTex * _ShorelineFoamTiling + float2(_Time.y, _Time.y / 2) * _ShorelineFoamSpeed).r;
+					shorelineFoam = step(0.8, shorelineFoam);
+					float shorelineMask = 0.0;
 					float depth = LinearEyeDepth(tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(IN.screenPos)).r);
 					
 					float rawDepth = depth - IN.screenPos.w;
@@ -172,7 +173,7 @@
 					shorelineMask = shorelineMask * smoothstep(0.9, 0.4, shorelineArea); // p1 보다 작으면 0 p2보다 크면 1
 					
 					// --- 다중 Shoreline 라인 추가 로직 ---
-					half multiLines = CalculateMultiShoreline(shorelineArea, _Time.y, _ShorelineFoamSpeed, 2.0);
+					half multiLines = CalculateMultiShoreline(shorelineArea, _Time.y, _ShorelineFoamSpeed, 2.0, shorelineFoam);
 					shorelineMask = saturate(shorelineMask + multiLines);
 
 					// 3. Floating Foam Masking
@@ -202,8 +203,7 @@
 
 					// (C) 마지막으로 부유 거품(Floating Foam) 더하기 혹은 섞기
 					// 거품이 아주 밝아야 하므로 여기서는 Emission에 더해줍니다.
-					o.Emission = withShoreline + causticsResult;// +floatingFoamResult;
-					//o.Emission = baseOcean;
+					o.Emission = withShoreline + causticsResult + saturate(1.0- shorelineArea)*0.7;// +floatingFoamResult;
 					o.Alpha = 0.8; // ocean.a 고정값 적용
 				}
 
@@ -213,8 +213,26 @@
 					// Blinn-Phong 모델을 사용하여 태양빛이 반사되는 날카로운 점을 만듭니다.
 					float3 h = normalize(lightDir + viewDir);
 					float nh = saturate(dot(s.Normal, h));
-					float spec = pow(nh, _SpecularPower);
-					float3 specularTerm = spec * _SpecularColor.rgb;
+					// 부드러운 스펙큘러 베이스
+					float specBase = pow(nh, _SpecularPower);
+
+					// 2. [추가] Fake Specular를 위한 노이즈 간섭
+					// Caustics에서 사용한 텍스처나 별도의 노이즈를 활용합니다.
+					// 여기서는 s.Normal의 미세한 변화를 증폭시켜 유기적인 모양을 만듭니다.
+					//float specNoise = tex2D(_CausticsTex, s.Normal.xz * 0.5 + _Time.y * _BumpSpeed).r;
+
+					// 노이즈와 스펙큘러 베이스를 결합 (곱하기 혹은 더하기)
+					float combinedSpec = specBase;// +(specNoise * specBase);
+
+					// 3. [핵심] Step을 이용한 스타일라이즈드 하드 엣지
+					// 0.5~0.8 사이의 값으로 조절하면 이미지처럼 또렷한 조각들이 생깁니다.
+					float spec1 = step(0.5, combinedSpec); // 아주 밝은 알맹이
+					float spec2 = smoothstep(0.3, 0.5, combinedSpec) * 0.5; // 주변의 은은한 번짐
+
+					float3 stylizedSpec = (spec1 + spec2) * _SpecularColor.rgb;
+
+					// 4. 최종 결과 출력
+					float3 specularTerm = stylizedSpec * _SpecularColor.rgb;
 
 					// 2. 프레넬 (Rim/Fresnel) 계산
 					// 카메라가 보는 각도에 따라 외곽선 반사 강도를 결정합니다.
@@ -230,7 +248,7 @@
 					// 4. 최종 결과 출력
 					float4 final;
 					// (물 색상 + 스펙큘러)에 빛의 세기(atten)와 조명색(_LightColor0)을 반영합니다.
-					final.rgb = specularTerm * _LightColor0.rgb * atten;
+					final.rgb = specularTerm * 2.0 * _LightColor0.rgb * atten;
 					final.a = s.Alpha;
 
 					return final;

@@ -124,10 +124,10 @@ Material:
     - _Refraction: 0.2
     - _SPMulti: 0.165
     - _SPPower: 1
-    - _ShorelineDefaultThickness: 0.31
-    - _ShorelineFoamSpeed: 0.15
-    - _ShorelineFoamThickness: 10
-    - _ShorelineFoamTiling: 10
+    - _ShorelineDefaultThickness: 0.132
+    - _ShorelineFoamSpeed: 0.07
+    - _ShorelineFoamThickness: 8.97
+    - _ShorelineFoamTiling: 4.39
     - _SmallFoamSpeed: 0.098
     - _SmallFoamThickness: 0.01
     - _SmallFoamTiling: 1
@@ -147,11 +147,11 @@ Material:
     m_Colors:
     - _CausticsColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DeepWaterColor: {r: 0, g: 0.4959962, b: 0.8666667, a: 1}
+    - _DeepWaterColor: {r: 0, g: 0.5368862, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _FloatingFoamColor: {r: 0.15641688, g: 0.3490566, b: 0.2768167, a: 1}
+    - _FloatingFoamColor: {r: 0, g: 1, b: 0.632653, a: 1}
     - _FoamColor: {r: 1, g: 0.17671019, b: 0, a: 1}
-    - _FresnelColor: {r: 0, g: 0.3294115, b: 1, a: 1}
+    - _FresnelColor: {r: 0.3726415, g: 0.7970605, b: 1, a: 1}
     - _SPColor: {r: 1, g: 1, b: 1, a: 1}
     - _ShorelineColor: {r: 1, g: 1, b: 1, a: 1}
     - _ShorelineFoamColor: {r: 1, g: 1, b: 1, a: 1}
