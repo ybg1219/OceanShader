@@ -1,4 +1,4 @@
-﻿Shader "Custom/S_StylizedOcean"
+﻿Shader "Custom/SS_StylizedOcean"
 {
 	Properties
 	{
@@ -21,22 +21,22 @@
 		_WaveTime("Wave Time", Range(1,10)) = 1.0
 
 		[Header(Shoreline Foam)]
-		_ShorelineFoamTex("Shoreline Foam Texture", 2D) = "white"{}
-		_ShorelineColor("Shoreline Color", Color) = (1,1,1,1)
-		_ShorelineFoamColor("Shoreline Foam Color", Color) = (1,1,1,1)
-		_ShorelineFoamTiling("Shoreline Foam Tiling", Range(1,10)) = 1
+		//_ShorelineColor("Shoreline Color", Color) = (1,1,1,1)
+		//_ShorelineFoamTex("Shoreline Foam Texture", 2D) = "white"{}
+		//_ShorelineFoamColor("Shoreline Foam Color", Color) = (1,1,1,1)
+		//_ShorelineFoamTiling("Shoreline Foam Tiling", Range(1,10)) = 1
 
 		_ShorelineDefaultThickness("Shoreline Default Thickness", Range(0.1,1)) = 0.3
 		_ShorelineFoamThickness("Shoreline Foam Thickness", Range(1,10)) = 0.1
 		_ShorelineFoamSpeed("Shoreline Foam Speed", Range(0,1)) = 0.1
 
-		[Header(Floating Foam)]
-		_FloatingFoamPos("Floating Foam Position (Mask)", 2D) = "white"{}
-		_FloatingFoamTex("Floating Foam Texture", 2D) = "white"{}
-		_FloatingFoamColor("Floating Foam Color", Color) = (1,1,1,1)
-		_FloatingFoamTiling("Floating Foam Tiling", Range(1,10)) = 1
-		_FloatingFoamThickness("Floating Foam Thickness", Range(0.01,2)) = 0.1
-		_FloatingFoamSpeed("Floating Foam Speed", Range(0.1,1)) = 0.1
+		//[Header(Floating Foam)]
+		//_FloatingFoamPos("Floating Foam Position (Mask)", 2D) = "white"{}
+		//_FloatingFoamTex("Floating Foam Texture", 2D) = "white"{}
+		//_FloatingFoamColor("Floating Foam Color", Color) = (1,1,1,1)
+		//_FloatingFoamTiling("Floating Foam Tiling", Range(1,10)) = 1
+		//_FloatingFoamThickness("Floating Foam Thickness", Range(0.01,2)) = 0.1
+		//_FloatingFoamSpeed("Floating Foam Speed", Range(0.1,1)) = 0.1
 
 		// Properties에 추가
 		[Header(Caustics Settings)]
@@ -199,57 +199,47 @@
 					baseOcean = lerp(baseOcean.rgb, _FresnelColor.rgb, fresnelFactor);
 
 					// (B) 물색에 shoreline 섞음
-					float3 withShoreline = baseOcean + _ShorelineColor.rgb*shorelineMask;//lerp(baseOcean, _ShorelineColor.rgb, shorelineMask);
+					float3 withShoreline = baseOcean + shorelineMask;//lerp(baseOcean, _ShorelineColor.rgb, shorelineMask);
 
 					// (C) 마지막으로 부유 거품(Floating Foam) 더하기 혹은 섞기
 					// 거품이 아주 밝아야 하므로 여기서는 Emission에 더해줍니다.
 					o.Emission = withShoreline + causticsResult + saturate(1.0- shorelineArea)*0.7;// +floatingFoamResult;
-					o.Alpha = 0.8; // ocean.a 고정값 적용
+					o.Alpha = 0.95; // ocean.a 고정값 적용
 				}
 
 				float4 LightingWater(SurfaceOutput s, float3 lightDir, float3 viewDir, float atten)
 				{
 					// 1. 하이라이트 (Specular) 계산
-					// Blinn-Phong 모델을 사용하여 태양빛이 반사되는 날카로운 점을 만듭니다.
 					float3 h = normalize(lightDir + viewDir);
 					float nh = saturate(dot(s.Normal, h));
-					// 부드러운 스펙큘러 베이스
 					float specBase = pow(nh, _SpecularPower);
 
-					// 2. [추가] Fake Specular를 위한 노이즈 간섭
-					// Caustics에서 사용한 텍스처나 별도의 노이즈를 활용합니다.
-					// 여기서는 s.Normal의 미세한 변화를 증폭시켜 유기적인 모양을 만듭니다.
-					//float specNoise = tex2D(_CausticsTex, s.Normal.xz * 0.5 + _Time.y * _BumpSpeed).r;
+					// [참고] 노이즈를 섞고 싶다면 이 부분을 활성화하세요.
+					// float specNoise = tex2D(_CausticsTex, s.Normal.xz * 0.5 + _Time.y * _BumpSpeed).r;
+					float combinedSpec = specBase;
 
-					// 노이즈와 스펙큘러 베이스를 결합 (곱하기 혹은 더하기)
-					float combinedSpec = specBase;// +(specNoise * specBase);
+					// 2. 스타일라이즈드 레이어 분리
+					// (A) 코어 스펙큘러: 임계값 이상에서만 아주 밝게 나타남
+					float coreSpec = step(0.95, combinedSpec);
 
-					// 3. [핵심] Step을 이용한 스타일라이즈드 하드 엣지
-					// 0.5~0.8 사이의 값으로 조절하면 이미지처럼 또렷한 조각들이 생깁니다.
-					float spec1 = step(0.5, combinedSpec); // 아주 밝은 알맹이
-					float spec2 = smoothstep(0.3, 0.5, combinedSpec) * 0.5; // 주변의 은은한 번짐
+					// (B) 외곽 스펙큘러: 코어보다 넓은 영역에 걸쳐 연하고 투명하게 나타남
+					// smoothstep의 범위를 넓게 잡아 부드러운 그라데이션을 만듭니다.
+					float haloSpec = smoothstep(0.2, 0.95, combinedSpec);
 
-					float3 stylizedSpec = (spec1 + spec2) * _SpecularColor.rgb;
-
-					// 4. 최종 결과 출력
-					float3 specularTerm = stylizedSpec * _SpecularColor.rgb;
-
-					// 2. 프레넬 (Rim/Fresnel) 계산
-					// 카메라가 보는 각도에 따라 외곽선 반사 강도를 결정합니다.
-					//float rim = saturate(dot(viewDir, s.Normal));
-					//float fresnelFactor = saturate(pow(1.0 - rim, _FresnelPower) + _FresnelOffset);
-
-					// 3. 색상 혼합 (기존 로직의 안정화)
-					// s.Emission에는 이미 (WaterColor + Foam)이 합쳐져 있습니다.
-					// 외곽으로 갈수록 FresnelColor가 나타나도록 lerp를 사용합니다.
-					//float3 waterWithFresnel = lerp(s.Emission, _FresnelColor.rgb, fresnelFactor);
-					//float3 waterWithFresnel = lerp(float3(0, 0, 0), _FresnelColor.rgb, fresnelFactor);
+					// 3. 색상 및 강도 결합
+					// 코어는 강하게(예: 5.0배), 외곽은 연하게(예: 0.2배) 가중치를 둡니다.
+					float3 finalSpec = (coreSpec * 5.0) + (haloSpec * 0.2);
+					float3 specularTerm = finalSpec * _SpecularColor.rgb;
 
 					// 4. 최종 결과 출력
 					float4 final;
-					// (물 색상 + 스펙큘러)에 빛의 세기(atten)와 조명색(_LightColor0)을 반영합니다.
-					final.rgb = specularTerm * 2.0 * _LightColor0.rgb * atten;
-					final.a = s.Alpha;
+					// 태양빛(atten)과 조명색을 반영
+					final.rgb = specularTerm * _LightColor0.rgb * atten;
+
+					// 5. 투명도 제어
+					// 하이라이트가 있는 부분은 물의 기본 Alpha보다 더 선명하게 보이도록 더해줍니다.
+					// haloSpec을 Alpha에 더해주면 외곽광 부분이 은은하게 비칩니다.
+					final.a = saturate(s.Alpha + (haloSpec * 0.5));
 
 					return final;
 				}

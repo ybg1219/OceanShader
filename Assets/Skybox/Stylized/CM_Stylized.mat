@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: M_Ocean
-  m_Shader: {fileID: 4800000, guid: 0524cc0ba616e314995b233a633aa1a4, type: 3}
+  m_Name: CM_Stylized
+  m_Shader: {fileID: 103, guid: 0000000000000000f000000000000000, type: 0}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -19,16 +19,12 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _BumpMap:
-        m_Texture: {fileID: 0}
+    - _BackTex:
+        m_Texture: {fileID: 2800000, guid: 4ec4f4cc3b6c84844ac86cae3376f244, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _BumpTex:
-        m_Texture: {fileID: 2800000, guid: 3ef92e101baa8a0429c85daf239e28e3, type: 3}
-        m_Scale: {x: 2, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _Cube:
-        m_Texture: {fileID: 8900000, guid: 656a59a5ff93c46498416d97e5c16b66, type: 3}
+    - _BumpMap:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -43,13 +39,21 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _DownTex:
+        m_Texture: {fileID: 2800000, guid: d6c990896c7eb204e8e3b1bfafb8440e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _EmissionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _FoamTex:
-        m_Texture: {fileID: 2800000, guid: d45205303c28ac14c8eb2d2a5429622d, type: 3}
-        m_Scale: {x: 4, y: 4}
+    - _FrontTex:
+        m_Texture: {fileID: 2800000, guid: c14f0926f86f4f241817a642b299ea9c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _LeftTex:
+        m_Texture: {fileID: 2800000, guid: 3727810162ca4044c8e114d0c4ebae6a, type: 3}
+        m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 0}
@@ -67,22 +71,24 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _RightTex:
+        m_Texture: {fileID: 2800000, guid: b018bbc8698bdb042b82fe0fbddb3be6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Tex:
+        m_Texture: {fileID: 8900000, guid: 53bee41b9945dd7459e816c211096618, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _UpTex:
+        m_Texture: {fileID: 2800000, guid: 15e73fa264113f14e8e3a51a3c5ff44f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _Amplitude: 1.34
-    - _BaseAlpha: 0
     - _BumpScale: 1
-    - _BumpSpeed: 0.2
     - _Cutoff: 0.5
-    - _DepthRange: 33.28
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _FoamSpeed: 0.1
-    - _FoamThickness: 2
-    - _FoamTickness: 10
-    - _FoamTiling: 4
-    - _Frequency: 4.91
-    - _Fresnel: 24
-    - _FresnelOffset: 0.207
+    - _Exposure: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
@@ -90,30 +96,13 @@ Material:
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _Refract: 0.2
-    - _Refraction: 0.2
-    - _SPAmplitude: 0.5
-    - _SPMulti: 1.17
-    - _SPPower: 300
+    - _Rotation: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
-    - _Speed: 0.181
     - _SrcBlend: 1
     - _UVSec: 0
-    - _WaveHeight: 1
-    - _WaveLength: 1
-    - _WaveSpeed: 1.91
-    - _WaveTime: 10
     - _ZWrite: 1
-    - _fOffset: 0.215
-    - _fresnel: 3.1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _ColorA: {r: 0, g: 0.98039246, b: 1, a: 1}
-    - _ColorB: {r: 1, g: 1, b: 1, a: 1}
-    - _DeepWaterColor: {r: 0.011836951, g: 0.079170525, b: 0.13207549, a: 0.91764706}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _FoamColor: {r: 1, g: 1, b: 1, a: 1}
-    - _SPColor: {r: 0.98823535, g: 0.9607844, b: 0.86666673, a: 1}
-    - _WaterColor: {r: 0.09153615, g: 0.14855404, b: 0.16037738, a: 0.16862746}
-    - _water: {r: 1, g: 1, b: 1, a: 1}
+    - _Tint: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}

@@ -112,8 +112,8 @@ Material:
     - _FoamThickness: 0.25
     - _FoamTiling: 1
     - _Frequency: 1
-    - _FresnelOffset: 0.372
-    - _FresnelPower: 9.8
+    - _FresnelOffset: 0.137
+    - _FresnelPower: 15.3
     - _GlossMapScale: 1
     - _Glossiness: 84
     - _GlossyReflections: 1
@@ -126,21 +126,21 @@ Material:
     - _SPPower: 1
     - _ShorelineDefaultThickness: 0.132
     - _ShorelineFoamSpeed: 0.07
-    - _ShorelineFoamThickness: 8.97
+    - _ShorelineFoamThickness: 6.45
     - _ShorelineFoamTiling: 4.39
     - _SmallFoamSpeed: 0.098
     - _SmallFoamThickness: 0.01
     - _SmallFoamTiling: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
-    - _SpecularPower: 300
+    - _SpecularPower: 119
     - _Speed: 0.2
     - _SrcBlend: 1
     - _UVSec: 0
-    - _WaveAmplitude: 1.82
-    - _WaveFrequency: 4.31
+    - _WaveAmplitude: 1.2
+    - _WaveFrequency: 2.13
     - _WaveSpeed: 1.5
-    - _WaveTime: 2.6
+    - _WaveTime: 1.62
     - _ZWrite: 1
     - _fOffset: 0.031
     - _fresnel: 1.8
@@ -151,9 +151,9 @@ Material:
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FloatingFoamColor: {r: 0, g: 1, b: 0.632653, a: 1}
     - _FoamColor: {r: 1, g: 0.17671019, b: 0, a: 1}
-    - _FresnelColor: {r: 0.3726415, g: 0.7970605, b: 1, a: 1}
+    - _FresnelColor: {r: 0.9407087, g: 0.805, b: 0.874, a: 1}
     - _SPColor: {r: 1, g: 1, b: 1, a: 1}
-    - _ShorelineColor: {r: 1, g: 1, b: 1, a: 1}
+    - _ShorelineColor: {r: 1, g: 0, b: 0, a: 1}
     - _ShorelineFoamColor: {r: 1, g: 1, b: 1, a: 1}
     - _SmallFoamColor: {r: 0.9427508, g: 1, b: 0, a: 1}
     - _SpecColor: {r: 1, g: 0.5547682, b: 0.16509432, a: 1}
