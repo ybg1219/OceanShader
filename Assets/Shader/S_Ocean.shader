@@ -1,125 +1,124 @@
 ﻿Shader "Custom/S_Ocean"
 {
-    Properties
-    {
-        _BumpTex ("BumpMap", 2D) = "bump" {}
-        _Cube("Skybox Material",Cube) = "" {}
+	Properties
+	{
+		[Header(Base Settings)]
+		_WaterColor("Shallow Water Color", Color) = (0.5, 0.8, 1, 1)
+		_DeepWaterColor("Deep Water Color", Color) = (0.1, 0.2, 0.4, 1)
+		_Cube("Skybox Reflect", Cube) = "" {}
 
-        _WaterColor("water color",Color) = (1,1,1,1)
-        _fresnel("fresnel",Range(1,50)) = 10
-        _fOffset("fresnel offset",Range(0,1)) = 0.3
+		[Header(Depth and Alpha)]
+		_DepthRange("Water Depth Range", Range(1, 50)) = 10
+		_BaseAlpha("Shallow Alpha", Range(0, 1)) = 0.5
 
-        _SPColor("Specular Color", Color) = (1,1,1,1)
-        _SPPower("Specular Power", Range(50,300)) = 1
-        _SPMulti("Specular Multiply", Range(1,10)) = 1.0
-        _Speed("Speed",Range(0,1)) = 0.2
-        
-        _Amplitude("Amplitude", Range(1,30)) = 1.0
-        _Frequency("Frequency", Range(1,10)) = 1.0
-        _WaveTime("Wave Time", Range(1,10)) = 1.0
+		[Header(Wave Settings)]
+		_Amplitude("Wave Amplitude", Range(0, 5)) = 0.5
+		_Frequency("Wave Frequency", Range(0, 10)) = 1.0
+		_WaveSpeed("Wave Speed", Range(0, 5)) = 1.0
 
-        _FoamTex("foam Texture",2D) = "white"{}
-        _FoamColor("foam Color", Color) = (1,1,1,1)
-        _FoamTiling("foam Tiling", Range(1,10)) = 1
-        _FoamThickness("Foam Thickness",Range(0.01,2)) = 0.1
-            _FoamSpeed("Foam Speed",Range(0,1)) = 0.1
+		[Header(Normal and Reflection)]
+		_BumpTex("Normal Map", 2D) = "bump" {}
+		_Speed("Normal Scroll Speed", Range(0, 1)) = 0.2
+		_Fresnel("Fresnel Power", Range(1, 50)) = 10
+		_FresnelOffset("Fresnel Offset", Range(0, 1)) = 0.3
 
+		[Header(Specular Settings)]
+		[HDR]_SPColor("Specular Color", Color) = (1,1,1,1)
+		_SPPower("Specular Power", Range(50, 300)) = 100
+		_SPMulti("Specular Multiply", Range(1, 10)) = 1.0
 
-        _Refraction("Refraction Strength", Range(0,0.2)) = 0.2
-    }
-    SubShader
-    {
-        Tags { "RenderType"="Transparent" "Queue" = "Transparent"}
-        LOD 200
+		[Header(Foam Settings)]
+		_FoamTex("Foam Texture", 2D) = "white" {}
+		_FoamColor("Foam Color", Color) = (1,1,1,1)
+		_FoamTiling("Foam Tiling", Range(1, 10)) = 1
+		_FoamThickness("Foam Thickness", Range(0.01, 2)) = 0.1
+	}
 
-        CGPROGRAM
-        // Physically based Standard lighting model, and enable shadows on all light types
-        #pragma surface surf Water alpha:blend vertex:vert
+		SubShader
+		{
+			Tags { "RenderType" = "Transparent" "Queue" = "Transparent" }
+			LOD 200
 
-        // Use shader model 3.0 target, to get nicer looking lighting
-        #pragma target 3.0
+			CGPROGRAM
+			#pragma surface surf Water alpha:blend vertex:vert
+			#pragma target 3.0
 
-        sampler2D _BumpTex;
-        sampler2D _FoamTex;
-        samplerCUBE _Cube;
-        //sampler2D_float _CameraDepthTexture;
-        sampler2D _CameraDepthTexture;
+			sampler2D _BumpTex, _FoamTex, _CameraDepthTexture;
+			samplerCUBE _Cube;
 
-        struct Input
-        {
-            float2 uv_BumpTex;
-            float2 uv_FoamTex;
-            float4 screenPos;
-            float3 worldRefl;
-            INTERNAL_DATA
-        };
-        float4 _WaterColor;
-        float _fresnel;
-        float _fOffset;
+			struct Input
+			{
+				float2 uv_BumpTex;
+				float2 uv_FoamTex;
+				float4 screenPos;
+				float3 worldRefl;
+				INTERNAL_DATA
+			};
 
-        float4 _SPColor;
-        float _SPPower;
-        float _SPMulti;
+			fixed4 _WaterColor, _DeepWaterColor, _SPColor, _FoamColor;
+			half _Fresnel, _FresnelOffset, _SPPower, _SPMulti;
+			half _Speed, _Amplitude, _Frequency, _WaveSpeed;
+			half _FoamTiling, _FoamThickness, _DepthRange, _BaseAlpha;
 
-        float _Speed;
-        float4 _FoamColor;
-        float _FoamTiling;
-        float _FoamThickness;
-        float _FoamSpeed;
+			void vert(inout appdata_full v)
+			{
+				float time = _Time.y * _WaveSpeed;
+				float movement = sin(abs(v.texcoord.x * 2 - 1) * _Frequency + time) * _Amplitude;
+				movement += sin(abs(v.texcoord.y * 2 - 1) * _Frequency + time) * _Amplitude;
+				v.vertex.y += movement * 0.5;
+			}
 
+			void surf(Input IN, inout SurfaceOutput o)
+			{
+				// 1. 노멀 및 반사
+				float2 normalUV = IN.uv_BumpTex;
+				float3 n1 = UnpackNormal(tex2D(_BumpTex, normalUV + _Time.x * _Speed));
+				float3 n2 = UnpackNormal(tex2D(_BumpTex, normalUV - _Time.x * _Speed));
+				o.Normal = normalize(n1 + n2);
+				fixed4 reflection = texCUBE(_Cube, WorldReflectionVector(IN, o.Normal));
 
-        float _WaveTime;
-        float _Frequency;
-        float _Amplitude;
+				// 2. 깊이 계산
+				float rawDepth = tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(IN.screenPos)).r;
+				float sceneDepth = LinearEyeDepth(rawDepth);
+				float waterDepth = sceneDepth - IN.screenPos.w; // 실제 수심
 
-        // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
-        // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
-        // #pragma instancing_options assumeuniformscaling
-        UNITY_INSTANCING_BUFFER_START(Props)
-            // put more per-instance properties here
-        UNITY_INSTANCING_BUFFER_END(Props)
+				// 3. 수심에 따른 색상 및 투명도 결정
+				// 깊을수록 1에 가까워짐
+				float depthMask = saturate(waterDepth / _DepthRange);
+				// 얕은 곳은 _WaterColor, 깊은 곳은 _DeepWaterColor
+				float4 finalWaterColor = lerp(_WaterColor, _DeepWaterColor, depthMask);
 
-        void vert(inout appdata_full v) 
-        {
-            float movement;
-            movement = sin(abs(v.texcoord.x*2-1)*_Frequency+_Time.y)*_Amplitude;
-            movement += sin(abs(v.texcoord.y*2-1)*_Frequency+_Time.y)*_Amplitude;
-            v.vertex.y += movement / 2;
-        }
+				// 4. 포말 연산 (아주 얕은 곳)
+				float2 foamUV = IN.uv_FoamTex * _FoamTiling + float2(_Time.y, _Time.y * 0.5) * 0.1;
+				fixed foamAlpha = tex2D(_FoamTex, foamUV).r;
+				float shorelineMask = saturate(waterDepth * _FoamThickness); // 0(해안선) ~ 1(바다)
 
-        void surf (Input IN, inout SurfaceOutput o)
-        {
-            float3 normal1 = UnpackNormal(tex2D(_BumpTex, IN.uv_BumpTex+ _Time.x * _Speed));
-            float3 normal2 = UnpackNormal(tex2D(_BumpTex, IN.uv_BumpTex- _Time.x * _Speed));
-            o.Normal = (normal1 + normal2) / 2;
-            float4 re = texCUBE(_Cube, WorldReflectionVector(IN, o.Normal));
+				// 5. 최종 합성
+				// 수면 색상 + 반사광을 기본으로 하고, 해안가에 포말 추가
+				float3 colorWithRefl = lerp(finalWaterColor.rgb, reflection.rgb, 0.5); // 반사 살짝 섞음
+				float3 withFoam = lerp(colorWithRefl , _FoamColor.rgb, foamAlpha);
+				float3 finalColor = lerp(withFoam, colorWithRefl, shorelineMask);
 
-            float f = tex2D(_FoamTex, IN.uv_FoamTex * _FoamTiling + float2(_Time.y, _Time.y / 2) * 0.1);
+				o.Emission = finalColor;
+				// 깊을수록 더 불투명해지도록 설정 (ShallowAlpha ~ 1.0)
+				o.Alpha = lerp(foamAlpha, finalWaterColor.a, shorelineMask);
+			}
 
-            //float depth = LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, IN.screenPos.xy)));
-            //float depth = LinearEyeDepth(tex2D(_CameraDepthTexture, IN.screenPos.xy)).r;
-            float depth = LinearEyeDepth(tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(IN.screenPos)).r); // /IN.screenPos.w 하면 원근 투영인 
-            float depthDef = saturate((depth - IN.screenPos.w)*_FoamThickness);
-            float3 foam = saturate(re.rgb+_FoamColor.rgb*f);
-            o.Emission = lerp(foam, re.rgb , depthDef); 
-        }
-        float4 LightingWater(SurfaceOutput s, float3 lightDir, float3 viewDir, float atten) {
-            //specular
-            float3 h = normalize(lightDir + viewDir);
-            float spec = saturate(dot(s.Normal, h));
-            spec = pow(spec, _SPPower);
-           
-            //rim
-            float rim = saturate(dot(viewDir, s.Normal));
-            rim = saturate(pow(1-rim, _fresnel)); //fOffset 물이 너무 투명한 것 방지.
+			float4 LightingWater(SurfaceOutput s, float3 lightDir, float3 viewDir, float atten)
+			{
+				float3 h = normalize(lightDir + viewDir);
+				float spec = pow(saturate(dot(s.Normal, h)), _SPPower);
 
-            float4 final;
-            final.rgb = spec * _SPColor.rgb * _SPMulti;
-            final.a = rim +spec;
-            return final;
-        }
+				float rim = 1.0 - saturate(dot(viewDir, s.Normal));
+				rim = pow(rim, _Fresnel) + _FresnelOffset;
 
-        ENDCG
-    }
-    FallBack "Legacy Shaders/Transparent/Vertexlit"
+				float4 final;
+				final.rgb = spec * _SPColor.rgb * _SPMulti * _LightColor0.rgb * atten;
+				final.a = s.Alpha + spec; // 스펙큘러 부분은 더 불투명하게
+
+				return final;
+			}
+			ENDCG
+		}
+			FallBack "Legacy Shaders/Transparent/Vertexlit"
 }
