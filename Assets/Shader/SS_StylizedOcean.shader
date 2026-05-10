@@ -21,7 +21,7 @@
 		_WaveTime("Wave Time", Range(1,10)) = 1.0
 
 		[Header(Shoreline Foam)]
-		//_ShorelineColor("Shoreline Color", Color) = (1,1,1,1)
+		_ShorelineColor("Shoreline Color", Color) = (1,1,1,1)
 		//_ShorelineFoamTex("Shoreline Foam Texture", 2D) = "white"{}
 		//_ShorelineFoamColor("Shoreline Foam Color", Color) = (1,1,1,1)
 		//_ShorelineFoamTiling("Shoreline Foam Tiling", Range(1,10)) = 1
@@ -120,7 +120,7 @@
 					// --- 0. Fake Depth 생성 ---
 					// 수면(보통 0)으로부터의 거리를 계산합니다.
 					// float distFromSurface = max(0, _WaveAmplitude - worldPos.y);
-					float fakeDepth = saturate(rawDepth)*saturate(pow(1-rawDepth,1.0));
+					float fakeDepth = saturate(rawDepth)*saturate(pow(1-rawDepth,1.5));
 					//return fakeDepth;
 					// --- 1. 기본 UV 및 애니메이션 설정 ---
 					float2 uv = worldPos.xz * 0.01 * tiling;
@@ -138,7 +138,7 @@
 
 					// --- 3. 바닥용 화선 (진하고 흐리게 깔리는 느낌) ---
 					// threshold를 낮게 잡아 면적을 넓히고, 뭉툭하게 만듭니다.
-					half floorMask = smoothstep(threshold - 0.2, threshold + 0.1, mask2)*0.5;
+					half floorMask = smoothstep(threshold - 0.5, threshold + 0.1, mask2);
 					floorMask *= fakeDepth;// smoothstep(0.4, 0.0, fakeDepth);
 					// 물 색상보다 어둡거나 진한 톤으로 설정 (causticsColor의 명도를 낮춰서 사용 가능)
 					half3 floorCaustics = floorMask * causticsColor.rgb ;
@@ -199,7 +199,7 @@
 					baseOcean = lerp(baseOcean.rgb, _FresnelColor.rgb, fresnelFactor);
 
 					// (B) 물색에 shoreline 섞음
-					float3 withShoreline = baseOcean + shorelineMask;//lerp(baseOcean, _ShorelineColor.rgb, shorelineMask);
+					float3 withShoreline = baseOcean + shorelineMask*_ShorelineColor;//lerp(baseOcean, _ShorelineColor.rgb, shorelineMask);
 
 					// (C) 마지막으로 부유 거품(Floating Foam) 더하기 혹은 섞기
 					// 거품이 아주 밝아야 하므로 여기서는 Emission에 더해줍니다.
